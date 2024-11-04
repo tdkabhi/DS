@@ -9,7 +9,7 @@ A distributed file system based on the principles of the Google File System (GFS
 - **Chunk Servers**: Store and replicate chunks, respond to read/write/replicate requests, and send periodic heartbeats to the master.
 - **Client Interface**: Provides file upload, download, listing, and leasing capabilities.
 
-## Key Features
+## Key Featuresa
 - **Chunk Management**: Files are split into fixed-size chunks (2048 bytes) and distributed across chunk servers.
 - **Replication**: Each chunk is replicated (default factor: 2) for fault tolerance.
 - **Integrity Checks**: Checksum validation prevents data corruption during storage and retrieval.
