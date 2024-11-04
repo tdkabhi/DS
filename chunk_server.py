@@ -6,6 +6,7 @@ import pickle
 import hashlib
 import logging
 import time
+import traceback
 
 logging.basicConfig(filename='chunk_server.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
