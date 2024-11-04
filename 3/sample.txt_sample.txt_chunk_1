@@ -1,0 +1,42 @@
+d, data, checksum)
+
+    def send_chunk(self, server_port, filename, chunk_id, data, checksum):
+        """Send a single chunk to a ChunkServer."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(('localhost', server_port))
+                chunk_request = {'command': 'store', 'filename': filename, 'chunk_id': chunk_id, 'data': data, 'checksum': checksum}
+                s.send(pickle.dumps(chunk_request))
+                response = pickle.loads(s.recv(4096))
+
+                if response.get('status') == 'success':
+                    logging.info("Successfully stored chunk %s on server %d", chunk_id, server_port)
+                else:
+                    logging.error("Failed to store chunk %s on server %d: %s", chunk_id, server_port, response.get('message'))
+        except Exception as e:
+            logging.error("Error sending chunk %s to server %d: %s", chunk_id, server_port, e)
+
+    def download_file(self, filename):
+        """Download a file from the distributed file system."""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as master_sock:
+            master_sock.connect((self.master_host, self.master_port))
+            download_request = {'command': 'download', 'filename': filename}
+            master_sock.send(pickle.dumps(download_request))
+            response = pickle.loads(master_sock.recv(4096))
+
+        if response.get('status') != 'success':
+            logging.error("Failed to download file: %s", response.get('message'))
+            return
+
+        chunk_locations = response.get('chunk_locations')
+        if not chunk_locations:
+            logging.error("No chunks found for file %s", filename)
+            return
+
+        # Reconstruct the file by downloading each chunk
+        with open(f"downloaded_{filename}", 'wb') as f:
+            for chunk_id, servers in chunk_locations.items():
+                data = self.retrieve_chunk(servers, filename, chunk_id)
+                if data:
+                    f.write(data)
+    
